@@ -7,10 +7,6 @@ public class FrontPagePanel extends JPanel {
 
 	public FrontPagePanel() {
 		add(new AvatarChoosing());
+		add(new LevelChoosing());
 	}
-	
-	
-	
-
-
 }

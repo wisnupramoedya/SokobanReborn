@@ -10,10 +10,10 @@ import com.plotarmor.frontpage.FrontPagePanel;
 public class Main {
 	private static void createAndShowGUI() throws IOException {
 		//Create and set up the window.
-        JFrame frame = new JFrame("CardLayoutDemo");
+        JFrame frame = new JFrame("Sokoban Reborn");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setContentPane(new FrontPagePanel());
-        frame.setSize(600, 600);
+        frame.setSize(700, 700);
 		frame.pack();
 		frame.setVisible(true);
 	}

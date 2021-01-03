@@ -42,7 +42,6 @@ public class AvatarChoosing extends JPanel {
 		imgIcons = new ArrayList<ImageIcon>();
 		for (String avatar : strAvatar) {
 			imgIcons.add(new ImageIcon(resourcesUrl + avatar + ".png"));
-			System.out.println(imgIcons);
 		}
 	}
 }
