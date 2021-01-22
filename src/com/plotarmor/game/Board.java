@@ -7,44 +7,37 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import javax.swing.JPanel;
 
-public class Board extends JPanel {
+import com.plotarmor.DataResources;
 
-    private final int OFFSET = 50;
+public class Board extends JPanel {
+	private static final long serialVersionUID = 1L;
+	private final int OFFSET = 50;
     private final int SPACE = 40;
     private final int LEFT_COLLISION = 1;
     private final int RIGHT_COLLISION = 2;
     private final int TOP_COLLISION = 3;
     private final int BOTTOM_COLLISION = 4;
 
-    private ArrayList<Wall> walls;
-    private ArrayList<Baggage> baggs;
-    private ArrayList<Area> areas;
+    public ArrayList<Wall> walls;
+    public ArrayList<Box> boxes;
+    public ArrayList<Area> areas;
     
-    private Player soko;
+    public Player soko;
     private int w = 0;
     private int h = 0;
     
+    public DataResources dataResources;
+    
     private boolean isCompleted = false;
 
-    private String level
-            = "    ######\n"
-            + "    ##   #\n"
-            + "    ##$  #\n"
-            + "  ####  $##\n"
-            + "  ##  $ $ #\n"
-            + "#### # ## #   ######\n"
-            + "##   # ## #####  ..#\n"
-            + "## $  $          ..#\n"
-            + "###### ### #@##  ..#\n"
-            + "    ##     #########\n"
-            + "    ########\n";
+    private String level;
 
-    public Board() {
-
+    public Board(DataResources dataResources) {
+    	this.dataResources = dataResources;
         initBoard();
     }
 
-    private void initBoard() {
+    public void initBoard() {
 
         addKeyListener(new TAdapter());
         setFocusable(true);
@@ -59,18 +52,19 @@ public class Board extends JPanel {
         return this.h;
     }
 
-    private void initWorld() {
-        
+    public void initWorld() {
         walls = new ArrayList<>();
-        baggs = new ArrayList<>();
+        boxes = new ArrayList<>();
         areas = new ArrayList<>();
 
         int x = OFFSET;
         int y = OFFSET;
 
         Wall wall;
-        Baggage b;
+        Box b;
         Area a;
+        
+        level = dataResources.createLevel();
 
         for (int i = 0; i < level.length(); i++) {
 
@@ -95,8 +89,8 @@ public class Board extends JPanel {
                     break;
 
                 case '$':
-                    b = new Baggage(x, y);
-                    baggs.add(b);
+                    b = new Box(x, y);
+                    boxes.add(b);
                     x += SPACE;
                     break;
 
@@ -107,7 +101,7 @@ public class Board extends JPanel {
                     break;
 
                 case '@':
-                    soko = new Player(x, y);
+                    soko = new Player(x, y, dataResources.createAvatarUrl());
                     x += SPACE;
                     break;
 
@@ -132,14 +126,14 @@ public class Board extends JPanel {
 
         world.addAll(walls);
         world.addAll(areas);
-        world.addAll(baggs);
+        world.addAll(boxes);
         world.add(soko);
 
         for (int i = 0; i < world.size(); i++) {
 
             Actor item = world.get(i);
 
-            if (item instanceof Player || item instanceof Baggage) {
+            if (item instanceof Player || item instanceof Box) {
                 
                 g.drawImage(item.getImage(), item.x() + 2, item.y() + 2, this);
             } else {
@@ -167,12 +161,7 @@ public class Board extends JPanel {
 
         @Override
         public void keyPressed(KeyEvent e) {
-
-            if (isCompleted) {
-                return;
-            }
-
-            int key = e.getKeyCode();
+        	int key = e.getKeyCode();
 
             switch (key) {
                 
@@ -183,7 +172,7 @@ public class Board extends JPanel {
                         return;
                     }
                     
-                    if (checkBagCollision(LEFT_COLLISION)) {
+                    if (checkboxCollision(LEFT_COLLISION)) {
                         return;
                     }
                     
@@ -197,7 +186,7 @@ public class Board extends JPanel {
                         return;
                     }
                     
-                    if (checkBagCollision(RIGHT_COLLISION)) {
+                    if (checkboxCollision(RIGHT_COLLISION)) {
                         return;
                     }
                     
@@ -211,7 +200,7 @@ public class Board extends JPanel {
                         return;
                     }
                     
-                    if (checkBagCollision(TOP_COLLISION)) {
+                    if (checkboxCollision(TOP_COLLISION)) {
                         return;
                     }
                     
@@ -225,7 +214,7 @@ public class Board extends JPanel {
                         return;
                     }
                     
-                    if (checkBagCollision(BOTTOM_COLLISION)) {
+                    if (checkboxCollision(BOTTOM_COLLISION)) {
                         return;
                     }
                     
@@ -313,35 +302,35 @@ public class Board extends JPanel {
         return false;
     }
 
-    private boolean checkBagCollision(int type) {
+    private boolean checkboxCollision(int type) {
 
         switch (type) {
             
             case LEFT_COLLISION:
                 
-                for (int i = 0; i < baggs.size(); i++) {
+                for (int i = 0; i < boxes.size(); i++) {
 
-                    Baggage bag = baggs.get(i);
+                    Box box = boxes.get(i);
 
-                    if (soko.isLeftCollision(bag)) {
+                    if (soko.isLeftCollision(box)) {
 
-                        for (int j = 0; j < baggs.size(); j++) {
+                        for (int j = 0; j < boxes.size(); j++) {
                             
-                            Baggage item = baggs.get(j);
+                            Box item = boxes.get(j);
                             
-                            if (!bag.equals(item)) {
+                            if (!box.equals(item)) {
                                 
-                                if (bag.isLeftCollision(item)) {
+                                if (box.isLeftCollision(item)) {
                                     return true;
                                 }
                             }
                             
-                            if (checkWallCollision(bag, LEFT_COLLISION)) {
+                            if (checkWallCollision(box, LEFT_COLLISION)) {
                                 return true;
                             }
                         }
                         
-                        bag.move(-SPACE, 0);
+                        box.move(-SPACE, 0);
                         isCompleted();
                     }
                 }
@@ -350,29 +339,29 @@ public class Board extends JPanel {
                 
             case RIGHT_COLLISION:
                 
-                for (int i = 0; i < baggs.size(); i++) {
+                for (int i = 0; i < boxes.size(); i++) {
 
-                    Baggage bag = baggs.get(i);
+                    Box box = boxes.get(i);
                     
-                    if (soko.isRightCollision(bag)) {
+                    if (soko.isRightCollision(box)) {
                         
-                        for (int j = 0; j < baggs.size(); j++) {
+                        for (int j = 0; j < boxes.size(); j++) {
 
-                            Baggage item = baggs.get(j);
+                            Box item = boxes.get(j);
                             
-                            if (!bag.equals(item)) {
+                            if (!box.equals(item)) {
                                 
-                                if (bag.isRightCollision(item)) {
+                                if (box.isRightCollision(item)) {
                                     return true;
                                 }
                             }
                             
-                            if (checkWallCollision(bag, RIGHT_COLLISION)) {
+                            if (checkWallCollision(box, RIGHT_COLLISION)) {
                                 return true;
                             }
                         }
                         
-                        bag.move(SPACE, 0);
+                        box.move(SPACE, 0);
                         isCompleted();
                     }
                 }
@@ -380,29 +369,29 @@ public class Board extends JPanel {
                 
             case TOP_COLLISION:
                 
-                for (int i = 0; i < baggs.size(); i++) {
+                for (int i = 0; i < boxes.size(); i++) {
 
-                    Baggage bag = baggs.get(i);
+                    Box box = boxes.get(i);
                     
-                    if (soko.isTopCollision(bag)) {
+                    if (soko.isTopCollision(box)) {
                         
-                        for (int j = 0; j < baggs.size(); j++) {
+                        for (int j = 0; j < boxes.size(); j++) {
 
-                            Baggage item = baggs.get(j);
+                            Box item = boxes.get(j);
 
-                            if (!bag.equals(item)) {
+                            if (!box.equals(item)) {
                                 
-                                if (bag.isTopCollision(item)) {
+                                if (box.isTopCollision(item)) {
                                     return true;
                                 }
                             }
                             
-                            if (checkWallCollision(bag, TOP_COLLISION)) {
+                            if (checkWallCollision(box, TOP_COLLISION)) {
                                 return true;
                             }
                         }
                         
-                        bag.move(0, -SPACE);
+                        box.move(0, -SPACE);
                         isCompleted();
                     }
                 }
@@ -411,30 +400,30 @@ public class Board extends JPanel {
                 
             case BOTTOM_COLLISION:
                 
-                for (int i = 0; i < baggs.size(); i++) {
+                for (int i = 0; i < boxes.size(); i++) {
 
-                    Baggage bag = baggs.get(i);
+                    Box box = boxes.get(i);
                     
-                    if (soko.isBottomCollision(bag)) {
+                    if (soko.isBottomCollision(box)) {
                         
-                        for (int j = 0; j < baggs.size(); j++) {
+                        for (int j = 0; j < boxes.size(); j++) {
 
-                            Baggage item = baggs.get(j);
+                            Box item = boxes.get(j);
                             
-                            if (!bag.equals(item)) {
+                            if (!box.equals(item)) {
                                 
-                                if (bag.isBottomCollision(item)) {
+                                if (box.isBottomCollision(item)) {
                                     return true;
                                 }
                             }
                             
-                            if (checkWallCollision(bag,BOTTOM_COLLISION)) {
+                            if (checkWallCollision(box,BOTTOM_COLLISION)) {
                                 
                                 return true;
                             }
                         }
                         
-                        bag.move(0, SPACE);
+                        box.move(0, SPACE);
                         isCompleted();
                     }
                 }
@@ -450,35 +439,35 @@ public class Board extends JPanel {
 
     public void isCompleted() {
 
-        int nOfBags = baggs.size();
-        int finishedBags = 0;
+        int nOfboxs = boxes.size();
+        int finishedboxs = 0;
 
-        for (int i = 0; i < nOfBags; i++) {
+        for (int i = 0; i < nOfboxs; i++) {
             
-            Baggage bag = baggs.get(i);
+            Box box = boxes.get(i);
             
-            for (int j = 0; j < nOfBags; j++) {
+            for (int j = 0; j < nOfboxs; j++) {
                 
                 Area area =  areas.get(j);
                 
-                if (bag.x() == area.x() && bag.y() == area.y()) {
+                if (box.x() == area.x() && box.y() == area.y()) {
                     
-                    finishedBags += 1;
+                    finishedboxs += 1;
                 }
             }
         }
 
-        if (finishedBags == nOfBags) {
+        if (finishedboxs == nOfboxs) {
             
             isCompleted = true;
             repaint();
         }
     }
 
-    private void restartLevel() {
+    public void restartLevel() {
 
         areas.clear();
-        baggs.clear();
+        boxes.clear();
         walls.clear();
 
         initWorld();

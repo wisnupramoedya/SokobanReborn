@@ -5,16 +5,16 @@ import javax.swing.ImageIcon;
 
 public class Player extends Actor {
 
-    public Player(int x, int y) {
+    public Player(int x, int y, String playerImgUrl) {
         super(x, y);
 
-        initPlayer();
+        initPlayer(playerImgUrl);
     }
 
-    private void initPlayer() {
-
-        ImageIcon iicon = new ImageIcon("src/resources/avatar/carlo.png");
+    private void initPlayer(String playerImgUrl) {
+        ImageIcon iicon = new ImageIcon(playerImgUrl);
         Image image = iicon.getImage().getScaledInstance(35, 35, Image.SCALE_DEFAULT);
+        
         setImage(image);
     }
 
